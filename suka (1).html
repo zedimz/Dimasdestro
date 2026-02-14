@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatAI - Destro AI by OpenAI</title>
+    <style>
+        /* Reset dan Font */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-image: url('web.jpg'); /* GANTI DENGAN URL GAMBAR KAMU */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Particle Effects untuk Keren */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0,255,255,0.1) 0%, transparent 70%);
+            animation: float 10s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100px); }
+        }
+
+        /* Container Utama dengan Glassmorphism */
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            animation: bounceIn 1s ease-out;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Teks Tengah */
+        .center-text {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            background: linear-gradient(45deg, #00FFFF, #0080FF, #00FFFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00FFFF; }
+            to { text-shadow: 0 0 20px #00FFFF, 0 0 30px #00FFFF; }
+        }
+
+        /* Sidebar/Menu di Kanan Atas */
+        .sidebar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2;
+        }
+
+        .sidebar a {
+            color: #00FFFF; /* Biru aqua */
+            text-decoration: none;
+            font-size: 1.2em;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .sidebar a:hover {
+            background: rgba(0, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .message.user {
+            background: #4ecdc4;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.bot {
+            background: #ff6b6b;
+            align-self: flex-start;
+        }
+
+        /* Input Container */
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            outline: none;
+        }
+
+        #user-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #send-btn {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            display: none; /* Sembunyikan footer lama, pakai sidebar */
+        }
+
+        /* Responsivitas */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            header h1 {
+                font-size: 2em;
+            }
+            .chat-container {
+                height: 300px;
+            }
+            .sidebar {
+                top: 10px;
+                right: 10px;
+                flex-direction: row;
+                gap: 5px;
+            }
+            .sidebar a {
+                font-size: 1em;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar di Kanan Atas -->
+    <div class="sidebar">
+        <a href="https://wa.me/62895404399397" target="_blank">📱 WA</a>
+        <a href="https://tiktok.com/@mas_destro" target="_blank">🎵 TikTok</a>
+        <a href="https://t.me/edimslimition" target="_blank">✈️ Telegram</a>
+        <a href="dimasdeveloper12@gmail.com">📧 Email</a>
+    </div>
+
+    <div class="container">
+        <!-- Teks Tengah -->
+        <div class="center-text">
+            Halo aku destro ai buatan openAi
+        </div>
+        
+        <header>
+            <h1>DestroAI</h1>
+            <p>dev:dimas </p>
+        </header>
+        
+        <div class="chat-container">
+            <div id="chat-box" class="chat-box">
+                <div class="message bot">Halo! Saya Destro AI. Apa yang bisa saya bantu hari ini?</div>
+            </div>
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Ketik pesanmu di sini..." />
+                <button id="send-btn">Kirim</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Hubungi kami:</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Elemen DOM
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Fungsi untuk tambah pesan ke chat box
+        function addMessage(message, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            msgDiv.textContent = message;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto scroll ke bawah
+        }
+
+        // Fungsi kirim pesan ke n8n backend
+        async function sendToN8n(message) {
+            try {
+                // Ganti URL ini dengan webhook n8n kamu (misalnya: https://your-n8n-instance/webhook/chat)
+                const response = await fetch('https://destrochatai.app.n8n.cloud/webhook/a753f31b-3168-4137-b26f-747b15e4c78c', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                });
+                const data = await response.json();
+                return data.response || 'Maaf, saya tidak mengerti.'; // Asumsi response dari n8n
+            } catch (error) {
+                console.error('Error:', error);
+                return 'Error: Tidak bisa connect ke backend.';
+            }
+        }
+
+        // Event listener untuk tombol kirim
+        sendBtn.addEventListener('click', async () => {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, 'user');
+                userInput.value = '';
+                
+                // Simulasi loading (opsional)
+                addMessage('Sedang mengetik...', 'bot');
+                
+                // Kirim ke n8n dan dapatkan response
+                const botResponse = await sendToN8n(message);
+                
+                // Hapus loading dan tambah response
+                chatBox.lastChild.remove();
+                addMessage(botResponse, 'bot');
+            }
+        });
+
+        // Enter key untuk kirim
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
