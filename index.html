@@ -189,7 +189,8 @@ async function send(){
   addMessage("Mengetik...","bot");
 
   try{
-    const res=await fetch("/api/chat",{
+    const res=await fetch("https://corsproxy.io/?https://destrochatai.app.n8n.cloud/webhook/fb24f271-39f8-46b4-baf5-4cfa6c78e0ea", {
+
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({ message:text })
