@@ -1,40 +1,491 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DestroAI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destro AI - AI Web with N8N Backend</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #3a7bd5 100%);
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            transition: background-image 0.5s ease;
+        }
+        /* Animated background elements */
+        .bg-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-element {
+            position: absolute;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: drift 20s infinite linear;
+        }
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 100px) scale(1.2); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(0, 255, 255, 0.3);
+            z-index: 100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 255, 255, 0.8);
+            color: black;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 101;
+            font-size: 1.2em;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transition: background 0.3s;
+        }
+        .sidebar-toggle:hover {
+            background: rgba(0, 204, 204, 0.8);
+        }
+        .sidebar-item {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #00FFFF;
+            text-decoration: none;
+            display: block;
+            transition: background 0.3s, transform 0.3s;
+            cursor: pointer;
+        }
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+        /* Background changer in sidebar */
+        .bg-changer {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .bg-changer input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        .bg-changer button {
+            width: 100%;
+            padding: 8px;
+            background: #00FFFF;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        /* Chat box in center */
+        .chat-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 20px;
+            background: rgba(0, 255, 255, 0.2);
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00FFFF;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 70%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            color: white;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: rgba(0, 255, 255, 0.3);
+        }
+        .message.ai {
+            align-self: flex-start;
+        }
+        .chat-input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(0, 255, 255, 0.3);
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1em;
+        }
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .send-btn {
+            padding: 15px 20px;
+            background: linear-gradient(45deg, #00FFFF, #0080FF);
+            color: black;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .send-btn:hover {
+            background: linear-gradient(45deg, #00CCCC, #0066CC);
+        }
+        /* Page content for non-chat pages */
+        .page-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .page-content h2 {
+            color: #00FFFF;
+            margin-bottom: 20px;
+        }
+        .page-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .back-btn {
+            padding: 10px 20px;
+            background: #00FFFF;
+            color: black;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        /* Status indicator */
+        .status {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            z-index: 50;
+            font-size: 0.9em;
+            color: #00FFFF;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .chat-container {
+                width: 95%;
+                height: 90vh;
+            }
+            .message {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background elements -->
+    <div class="bg-elements" id="bgElements"></div>
 
-<style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Segoe UI, sans-serif;
-}
+    <!-- Sidebar toggle -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
-body{
-  background:url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") no-repeat center center/cover;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-  color:white;
-}
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <h3 style="color: #00FFFF; margin-bottom: 20px;">Menu</h3>
+        <div class="sidebar-item" onclick="showPage('home')">Home</div>
+        <div class="sidebar-item" onclick="showPage('about')">About</div>
+        <div class="sidebar-item" onclick="showPage('features')">Features</div>
+        <div class="sidebar-item" onclick="showPage('contact')">Contact</div>
+        <div class="bg-changer">
+            <h4 style="color: #00FFFF;">Ganti Background JPG</h4>
+            <input type="text" id="bgUrl" placeholder="Masukkan URL JPG">
+            <input type="file" id="bgFile" accept="image/jpeg">
+            <button onclick="changeBackground()">Apply</button>
+        </div>
+    </div>
 
-/* Sidebar */
-.sidebar{
-  position:absolute;
-  top:20px;
-  right:20px;
-  display:flex;
-  gap:10px;
-}
+    <div class="container">
+        <!-- Main Chat Container -->
+        <div class="chat-container" id="mainContainer">
+            <div class="chat-header">
+                Destro-AI, buatan Dimas, Dev Dimas
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">Halo! Saya Destro AI, buatan Dimas. Mulai chat dengan saya!</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ketik pesan Anda di sini...">
+                <button class="send-btn" onclick="sendMessage()">Kirim</button>
+            </div>
+        </div>
+    </div>
 
-.sidebar a{
-  text-decoration:none;
-  color:#00ffff;
-  background:rgba(0,0,0,0.4);
+    <!-- Status indicator -->
+    <div class="status" id="status">Status: Ready</div>
+
+    <script>
+        // Hardcoded N8N webhook URL (ganti dengan URL kamu yang bener)
+        const webhookUrl = 'https://your-n8n-production-url.com/webhook/your-endpoint'; // Ganti ini dengan URL N8N kamu yang bener
+
+        let currentPage = 'home'; // Track current page
+
+        // Create background elements
+        function createBgElements() {
+            const bgContainer = document.getElementById('bgElements');
+            for (let i = 0; i < 20; i++) {
+                const element = document.createElement('div');
+                element.className = 'bg-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.top = Math.random() * 100 + '%';
+                element.style.width = Math.random() * 100 + 50 + 'px';
+                element.style.height = element.style.width;
+                element.style.animationDelay = Math.random() * 20 + 's';
+                bgContainer.appendChild(element);
+            }
+        }
+        createBgElements();
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Change background function
+        function changeBackground() {
+            const urlInput = document.getElementById('bgUrl');
+            const fileInput = document.getElementById('bgFile');
+            if (urlInput.value) {
+                document.body.style.backgroundImage = `url(${urlInput.value})`;
+            } else if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.body.style.backgroundImage = `url(${e.target.result})`;
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // Show page function
+        function showPage(page) {
+            const container = document.getElementById('mainContainer');
+            currentPage = page;
+            if (page === 'home') {
+                container.innerHTML = `
+                    <div class="chat-header">
+                        Destro-AI, buatan Dimas, Dev Dimas
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai">Halo! Saya Destro AI, buatan Dimas. Mulai chat dengan saya!</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Ketik pesan Anda di sini...">
+                        <button class="send-btn" onclick="sendMessage()">Kirim</button>
+                    </div>
+                `;
+                // Re-attach event listeners
+                document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            } else {
+                let content = '';
+                if (page === 'about') {
+                    content = `
+                        <div class="chat-header">About Destro AI</div>
+                        <div class="page-content">
+                            <h2>Tentang Destro AI</h2>
+                            <p>Destro AI adalah AI canggih buatan Dimas, dikembangkan untuk membantu pengguna dengan berbagai tugas. Backend menggunakan N8N untuk pemrosesan pesan secara real-time.</p>
+                            <p>AI ini dirancang untuk interaksi yang alami dan responsif, dengan fitur chat yang mudah digunakan.</p>
+                            <button class="back-btn" onclick="showPage('home')">Kembali ke Chat</button>
+                        </div>
+                    `;
+                } else if (page === 'features') {
+                    content = `
+                        <div class="chat-header">Features</div>
+                        <div class="page-content">
+                            <h2>Fitur Destro AI</h2>
+                            <p>- Chat AI dengan backend N8N</p>
+                            <p>- Respons cepat dan akurat</p>
+                            <p>- Ganti background JPG</p>
+                            <p>- Sidebar navigasi</p>
+                            <p>- Animasi dan efek visual</p>
+                            <button class="back-btn" onclick="showPage('home')">Kembali ke Chat</button>
+                        </div>
+                    `;
+                } else if (page === 'contact') {
+                    content = `
+                        <div class="chat-header">Contact</div>
+                        <div class="page-content">
+                            <h2>Hubungi Kami</h2>
+                            <p>WA: +62895404399397</p>
+                            <p>TikTok: @mas_destro</p>
+                            <p>Telegram: @edimslimition</p>
+                            <p>Email: dimasdeveloper12@gmail.com</p>
+                            <button class="back-btn" onclick="showPage('home')">Kembali ke Chat</button>
+                        </div>
+                    `;
+                }
+                container.innerHTML = content;
+            }
+            // Close sidebar after selection
+            toggleSidebar();
+        }
+
+        // Send message function - integrated with hardcoded N8N webhook
+        function sendMessage() {
+            if (currentPage !== 'home') return; // Only work in home/chat mode
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+            const status = document.getElementById('status');
+
+            if (input.value.trim()) {
+                // Add user message to chat
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user';
+                userMessage.textContent = input.value;
+                messages.appendChild(userMessage);
+                const userText = input.value; // Store the message
+                input.value = '';
+                messages.scrollTop = messages.scrollHeight;
+
+                // Send to hardcoded N8N webhook
+                status.textContent = 'Status: Mengirim pesan...';
+                fetch("https://destrochatai.app.n8n.cloud/webhook/Dimastres", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: userText,
+                        timestamp: new Date().toISOString(),
+                        user: 'Destro AI User'
+                    })
+                })
+                .then(response => {
+    if (response.ok) {
+        return response.text(); // ✅ UBAH JADI TEXT
+    } else {
+        throw new Error('HTTP ' + response.status);
+    }
+})
+.then(text => {
+    const aiMessage = document.createElement('div');
+    aiMessage.className = 'message ai';
+    aiMessage.textContent = text; // ✅ LANGSUNG TEXT
+    messages.appendChild(aiMessage);
+    messages.scrollTop = messages.scrollHeight;
+    status.textContent = 'Status: Pesan berhasil dikirim';
+                })
+                .catch(error => {
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'message ai';
+                    errorMessage.textContent = 'Error: ' + error.message + '. Pastikan webhook N8N aktif.';
+                    messages.appendChild(errorMessage);
+                    messages.scrollTop = messages.scrollHeight;
+                    status.textContent = 'Status: Error - ' + error.message;
+                });
+            }
+        }
+
+        // Enter key for chat
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && currentPage === 'home') {
+                sendMessage();
+            }
+        });
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.sidebar-toggle');
+            if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>  background:rgba(0,0,0,0.4);
   padding:8px 12px;
   border-radius:12px;
   font-size:14px;
